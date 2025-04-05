@@ -46,7 +46,7 @@ class Game:
         pass
 
     async def main(self):
-        current_frame = f.Frame(self)
+        current_frame = f.PackingFrame(self)
         current_frame.load()
         self.clock.tick(60)
 
