@@ -8,7 +8,7 @@ from primitives import Pose
 
 class Grabbable:
 
-    def __init__(self, frame, surface, name="Object", position = (0, 0), alive = False, can_only_be_placed_in = None, can_only_contain = None, contents_must_be_smaller = False):
+    def __init__(self, frame, surface, name="Object", position = (0, 0), can_contain_things = False, alive = False, can_only_be_placed_in = None, can_only_contain = None, contents_must_be_smaller = False, tags=None, can_only_contain_tags = None, capacity = 1, cannot_be_placed_in_anything=False):
         self.name = name
         self.frame = frame
         self.position = Pose(position)
@@ -31,19 +31,36 @@ class Grabbable:
         self.is_geometric_container = False
         self.can_be_geometric_container = False
 
-        self.can_contain_things = False
+        self.cannot_be_placed_in_anything = cannot_be_placed_in_anything
+
+        self.draw_outline = []
+        self.outline_enabled = False
+
+        self.can_contain_things = can_contain_things
         self.alive = alive
         if not can_only_be_placed_in:
             self.can_only_be_placed_in = []
         else:
             self.can_only_be_placed_in = can_only_be_placed_in
 
-        self.maximum_capacity = 1
+        self.maximum_capacity = capacity
         if not can_only_contain:
             self.can_only_contain = []
         else:
             self.can_only_contain = can_only_contain
             self.can_contain_things = True
+
+        if not can_only_contain_tags:
+            self.can_only_contain_tags = []
+        else:
+            self.can_only_contain_tags = can_only_contain_tags
+            self.can_contain_things = True
+
+        if not tags:
+            self.tags = []
+        else:
+            self.tags = tags
+
         self.contents_must_be_smaller = contents_must_be_smaller
 
         self.tooltip = self.generate_tooltip()
@@ -64,6 +81,18 @@ class Grabbable:
         #     sections.append(f"Full")
         if self.name == "Crouton":
             sections.append("Shh... she's sleeping!")
+        if self.name == "Nantucket Entertainment System":
+            sections.append("Holds one game cartridge")
+        if self.name == "Deck Box":
+            sections.append("Holds 60 game cards")
+        if self.name == "Dice Tin":
+            sections.append("Holds any number of dice")
+        for tag in self.tags:
+            sections.append(tag)
+        if self.name == "Egg of the Eternal Void":
+            sections.append("Can hold any one object")
+        if self.cannot_be_placed_in_anything:
+            sections.append("Cannot be placed in anything")
         return sections
 
     def set_surface(self, surface):
@@ -73,9 +102,10 @@ class Grabbable:
 
     def set_draw_surface(self, draw_surface):
         self.draw_surface = draw_surface
+        draw_mask = pygame.mask.from_surface(self.draw_surface, 128)
         self.tint_surface = self.generate_tint_surface()
-        self.mouseover_rect = pygame.mask.from_surface(self.draw_surface, 128).get_bounding_rects()
-
+        self.mouseover_rect = draw_mask.get_bounding_rects()
+        self.draw_outline = draw_mask.outline(2)
 
     def update_mask(self):
         self.mask = pygame.mask.from_surface(self.surface, 50)
@@ -167,13 +197,24 @@ class Grabbable:
         if (abs(rotation) > 1):
             surf_to_draw = pygame.transform.rotate(surf_to_draw, rotation)
 
-        x = offset[0] + self.position.x - surf_to_draw.get_width()//2
-        y = offset[1] + self.position.y - surf_to_draw.get_height()//2
+        x = int(offset[0] + self.position.x - surf_to_draw.get_width()//2)
+        y = int(offset[1] + self.position.y - surf_to_draw.get_height()//2)
+        # if self.outline_enabled:
+        #     self.draw_outline = pygame.mask.from_surface(surf_to_draw).outline(2)
+        #     if self.draw_outline:
+        #         pygame.draw.polygon(
+        #             surface,
+        #             (255, 255, 255),
+        #             [(i[0] + x, i[1] + y) for i in self.draw_outline],
+        #             width=3
+        #         )
         surface.blit(surf_to_draw, (x, y))
 
         for grabbable in self.inner_grabbables:
             if grabbable.since_put_in < grabbable.put_in_animation_length:
                 grabbable.draw(surface, offset)
+
+
 
         #self.draw_rects(surface, offset)
 
@@ -190,7 +231,11 @@ class Grabbable:
     def can_be_put_in(self, other, position = None):
         if not other.can_contain_things:
             return False
+        if self.cannot_be_placed_in_anything:
+            return False
         if other.can_only_contain and self.name not in other.can_only_contain:
+            return False
+        if other.can_only_contain_tags and not any([tag in other.can_only_contain_tags for tag in self.tags]):
             return False
         if other.is_full():
             return False
@@ -292,6 +337,8 @@ class GeometricContainer(Grabbable):
         return True
 
     def can_have_other_put_in(self, other, position):
+        if other.cannot_be_placed_in_anything:
+            return False
         if (other.can_only_be_placed_in):
             if not self.name in other.can_only_be_placed_in:
                 return False

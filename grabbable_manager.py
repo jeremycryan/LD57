@@ -71,6 +71,11 @@ class GrabbableManager:
 
         self.set_tooltip_grabbable()
 
+        for grabbable in self.grabbables:
+            grabbable.outline_enabled = False
+        if self.tooltip_grabbable:
+            self.tooltip_grabbable.outline_enabled = True
+
     def update_held_grabbable_placeability(self, use_mouse_position = False):
         for grabbable in self.grabbables:
             grabbable.placeable = True
@@ -208,7 +213,6 @@ class GrabbableManager:
         self.update_held_grabbable_placeability(True)
         if self.held_grabbable and not self.held_grabbable.placeable:
             self.held_grabbable.target_position = self.original_grab_position
-            self.frame.game.shake(2)
             if self.original_grab_container:
                 if self.original_grab_container.try_insert(self.held_grabbable, self.original_grab_container.position):
                     self.original_grab_container = None
@@ -244,7 +248,7 @@ class GrabbableManager:
                 if container.get_count_of_grabbables_recursive() + 1 == len(self.grabbables):
                     almost_won = True
         if almost_won:
-            self.frame.banner_toast.small_alert("Close the bag!")
+            self.frame.banner_toast.small_alert("Close your suitcase!")
         else:
             self.frame.banner_toast.small_alert("")
         return False
