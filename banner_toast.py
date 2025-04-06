@@ -23,6 +23,7 @@ class BannerToast:
         self.fade_to_black = False
         self.faded_to_black = False
         self.age = 0
+        self.text = ""
 
     def update(self, dt, events):
         self.since_toast += dt
@@ -38,10 +39,12 @@ class BannerToast:
         through = self.since_toast/self.toast_duration
         if (through >= 1 and self.fade_to_black):
             self.faded_to_black = True
+        if not self.text:
+            self.showing = 0
         self.black.set_alpha(max(256 - 200 * self.age, max(128 * self.showing, 512 * through - 255 if self.fade_to_black else 0)))
         if (self.black.get_alpha() > 1):
             surface.blit(self.black, (0, 0))
-        if (self.showing > 0):
+        if (self.showing > 0 and self.text):
 
             squint_height = int(80 * self.showing)
             squint_surf = pygame.Surface((c.WINDOW_WIDTH, squint_height))
@@ -71,9 +74,9 @@ class BannerToast:
 
         pass
 
-    def show(self, text, fade_to_black = False):
+    def show(self, text, fade_to_black = False, delay = 0):
         self.text = text
-        self.since_toast = 0
+        self.since_toast = delay
         self.text_surf = self.font.render(self.text, False, (255, 255, 255))
         self.small_alert_text = ""
         self.fade_to_black = fade_to_black

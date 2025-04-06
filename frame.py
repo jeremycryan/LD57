@@ -8,7 +8,7 @@ from grabbable_manager import GrabbableManager
 from image_manager import ImageManager
 from sound_manager import SoundManager
 import constants as c
-
+from Button import Button
 
 class Frame:
     def __init__(self, game):
@@ -27,21 +27,23 @@ class Frame:
     def next_frame(self):
         return Frame(self.game)
 
+
+
 class PackingFrame(Frame):
     def load(self):
         self.grabbable_manager = GrabbableManager(self)
         LEVELS = [[
             Grabbable(self, ImageManager.load("assets/images/charger.png"), name="Charger",
-                      position=(1152 / 2, 309 / 2)),
+                      position=(1152 / 2, 309 / 2), shadow_height=4),
             Grabbable(self, ImageManager.load("assets/images/mouse.png"), name="Mouse", position=(968 / 2, 668 / 2)),
             Grabbable(self, ImageManager.load("assets/images/ban.png"), name="Laptop", position=(372 / 2, 609 / 2)),
             Grabbable(self, ImageManager.load("assets/images/headphones.png"), name="Headphones",
                       position=(242 / 2, 561 / 2)),
             Grabbable(self, ImageManager.load("assets/images/toothbrush.png"), name="Toothbrush",
-                      position=(108 / 2, 167 / 2)),
+                      position=(108 / 2, 167 / 2), shadow_height=2),
             Grabbable(self, ImageManager.load("assets/images/toothpaste.png"), name="Toothpaste",
-                      position=(1053 / 2, 297 / 2)),
-            Grabbable(self, ImageManager.load("assets/images/soap.png"), name="Soap", position=(73 / 2, 216 / 2)),
+                      position=(1053 / 2, 297 / 2), shadow_height=3),
+            Grabbable(self, ImageManager.load("assets/images/soap.png"), name="Soap", position=(73 / 2, 216 / 2), shadow_height=3),
             Grabbable(self, ImageManager.load("assets/images/pillow.png"), name="Pillow", position=(31 / 2, 405 / 2)),
             GeometricContainer(self,
                                ImageManager.load("assets/images/suitcase_open_placeable_area.png"),
@@ -144,7 +146,7 @@ class PackingFrame(Frame):
                 Grabbable(self, ImageManager.load("assets/images/charizard.png"),
                           name="Chardragon",
                           position=(513, 68),
-                          tags=["Game Card"]),
+                          tags=["Game Card"], shadow_height=2),
                 GeometricContainer(self,
                                    ImageManager.load("assets/images/kentucky_open_placeable_area.png"),
                                    draw_surf=ImageManager.load("assets/images/kentucky_open.png"),
@@ -162,7 +164,7 @@ class PackingFrame(Frame):
                                                           position=(568, 57),
                                                           name="Scrumble Rack"),
                                        Grabbable(self, ImageManager.load("assets/images/scrabble_7.png"),
-                                                 name="Scrumble Tile",
+                                                 name="Scrumble Tile", shadow_height=2,
                                                  position=(596, 23)),
                                    ]),
                 GeometricContainer(self,
@@ -183,10 +185,10 @@ class PackingFrame(Frame):
                                        Grabbable(self, ImageManager.load("assets/images/lotus.png"),
                                                  name="Mox Lily",
                                                  position=(565, 132),
-                                                 tags=["Game Card"]),
+                                                 tags=["Game Card"], shadow_height=2),
                                        Grabbable(self, ImageManager.load("assets/images/scrabble_5.png"),
                                                  name="Scrumble Tile",
-                                                 position=(523, 167)),
+                                                 position=(523, 167), shadow_height=2),
                                        Grabbable(self, ImageManager.load("assets/images/d20.png"),
                                                  name="D20",
                                                  tags=["Dice"],
@@ -194,14 +196,14 @@ class PackingFrame(Frame):
                                    ]),
                 Grabbable(self, ImageManager.load("assets/images/scrabble_l.png"),
                           name="Scrumble Tile",
-                          position=(108, 227)),
+                          position=(108, 227), shadow_height=2),
                 Grabbable(self, ImageManager.load("assets/images/scrabble_d.png"),
                           name="Scrumble Tile",
-                          position=(390, 330)),
+                          position=(390, 330), shadow_height=2),
                 Grabbable(self, ImageManager.load("assets/images/ace.png"),
                           name="Ace of Spades",
                           position=(461, 302),
-                          tags = ["Game Card"]),
+                          tags = ["Game Card"], shadow_height=2),
                 Grabbable(self, ImageManager.load("assets/images/d8.png"),
                           name="D8",
                           tags=["Dice"],
@@ -209,15 +211,15 @@ class PackingFrame(Frame):
                 Grabbable(self, ImageManager.load("assets/images/pot_of_greed.png"),
                           name="Unpleasant Teapot",
                           position=(81, 82),
-                          tags = ["Game Card"]),
+                          tags = ["Game Card"], shadow_height=2),
                 Grabbable(self, ImageManager.load("assets/images/strike.png"),
                           name="Slash",
                           position=(45, 258),
-                          tags = ["Game Card"]),
+                          tags = ["Game Card"], shadow_height=2),
                 Grabbable(self, ImageManager.load("assets/images/reverse.png"),
                           name="Undo",
                           position=(578, 201),
-                          tags = ["Game Card"]),
+                          tags = ["Game Card"], shadow_height=2),
                 Grabbable(self, ImageManager.load("assets/images/deckbox.png"),
                           name="Deck Box",
                           position=(54, 47),
@@ -255,7 +257,7 @@ class PackingFrame(Frame):
                           position=(253, 331)),
                 Grabbable(self, ImageManager.load("assets/images/airlock.png"),
                           name="Airlock",
-                          position=(553, 220)),
+                          position=(528, 220)),
 
             ]
         ]
@@ -269,23 +271,178 @@ class PackingFrame(Frame):
         Grabbable(self, ImageManager.load("assets/images/toy.png"), name="Cat Toy",
                   position=(542, 326)),
         ]
-        for item in LEVELS[self.game.current_level + 2]:
+        for item in LEVELS[self.game.current_level]:
             self.grabbable_manager.add_grabbable(item)
 
         self.banner_toast = BannerToast(self)
-        self.banner_toast.show("Pack your suitcase!")
+        self.banner_toast.show("Pack everything up!")
+
+        if self.game.current_level == 0:
+            self.game.main_music.play(-1)
+
+        self.purr_sound = SoundManager.load("assets/audio/purr.ogg")
+        play_purr = False
+        for grabbable in self.grabbable_manager.grabbables:
+            if grabbable.name == "Crouton":
+                play_purr = True
+                break
+        if play_purr:
+            self.purr_sound.set_volume(0)
+            self.purr_sound.play(-1)
+
+        if self.game.current_level == 0:
+            self.backdrop = ImageManager.load("assets/images/backdrop.png")
+        elif self.game.current_level == 1:
+            self.backdrop = ImageManager.load("assets/images/backdrop_2.png")
+        elif self.game.current_level == 2:
+            self.backdrop = ImageManager.load("assets/images/backdrop_3.png")
+
 
     def update(self, dt, events):
         self.grabbable_manager.update(dt, events)
         self.banner_toast.update(dt, events)
-        if self.grabbable_manager.completed and self.banner_toast.faded_to_black and not self.done:
+        if (self.grabbable_manager.completed or self.grabbable_manager.restarting) and self.banner_toast.faded_to_black and not self.done:
             self.done = True
-            self.game.current_level += 1
+            if (True or self.grabbable_manager.completed):
+                self.game.current_level += 1
+        if (self.grabbable_manager.held_grabbable and self.grabbable_manager.held_grabbable.name == "Crouton"):
+            self.purr_sound.set_volume(1)
+        else:
+            self.purr_sound.set_volume(0)
 
     def draw(self, surface, offset=(0, 0)):
-        surface.fill((128, 128, 128))
+        surface.blit(self.backdrop, (int(offset[0] + c.WINDOW_WIDTH//2 - self.backdrop.get_width()//2), int(offset[1] + c.WINDOW_HEIGHT//2 - self.backdrop.get_height()//2)))
         self.grabbable_manager.draw(surface, offset)
         self.banner_toast.draw(surface, offset)
 
     def next_frame(self):
-        return PackingFrame(self.game)
+        self.purr_sound.stop()
+        return TransitionFrame(self.game)
+
+
+class TitleFrame(Frame):
+    def load(self):
+        self.grabbable_manager = GrabbableManager(self)
+
+        LEVEL_TITLE = [
+            Grabbable(self, ImageManager.load("assets/images/suitcase_closed_title.png"), name="Suitcase",
+                      position=(c.WINDOW_WIDTH // 2, c.WINDOW_HEIGHT // 3)),
+            Grabbable(self, ImageManager.load("assets/images/crouton.png"), name="Crouton",
+                      position=(c.WINDOW_WIDTH // 2, c.WINDOW_HEIGHT * 0.22), alive=True),
+            Grabbable(self, ImageManager.load("assets/images/toy.png"), name="Cat Toy",
+                      position=(c.WINDOW_WIDTH *5, c.WINDOW_HEIGHT * 5)),
+        ]
+        for item in LEVEL_TITLE:
+            self.grabbable_manager.add_grabbable(item)
+            item.can_be_grabbed = False
+        self.banner_toast = BannerToast(self)
+
+        self.game.current_level = 0
+
+        self.game.title_music.play(-1)
+
+        self.backdrop = ImageManager.load("assets/images/title_backdrop.png")
+        self.continue_button = Button(
+            ImageManager.load("assets/images/play_button.png"),
+            (c.WINDOW_WIDTH//2, c.WINDOW_HEIGHT - 30),
+            on_click=self.proceed,
+            hover_surf=ImageManager.load("assets/images/play_button_hovered.png"),
+            click_surf=ImageManager.load("assets/images/play_button_clicked.png"),
+        )
+
+    def proceed(self):
+        self.banner_toast.show("", fade_to_black=True, delay=1)
+        self.game.shake(2)
+        self.grabbable_manager.level_complete.play()
+        self.game.title_music.fadeout(500)
+
+    def update(self, dt, events):
+        self.grabbable_manager.update(dt, events)
+        self.banner_toast.update(dt, events)
+
+        if self.banner_toast.faded_to_black:
+            self.done = True
+
+        self.continue_button.update(dt, events)
+
+    def draw(self, surface, offset=(0, 0)):
+        surface.blit(self.backdrop, (offset[0] + c.WINDOW_WIDTH//2 - self.backdrop.get_width()//2, offset[1] + c.WINDOW_HEIGHT//2 - self.backdrop.get_height()//2))
+        self.grabbable_manager.draw(surface, offset)
+        self.continue_button.draw(surface, *offset)
+        self.banner_toast.draw(surface, offset)
+
+    def next_frame(self):
+        return TransitionFrame(self.game)
+
+
+class ThanksFrame(Frame):
+    def load(self):
+        self.game.main_music.play(-1)
+
+        self.backdrop = ImageManager.load("assets/images/end_screen_background.png")
+        self.continue_button = Button(
+            ImageManager.load("assets/images/menu_button.png"),
+            (c.WINDOW_WIDTH//2, c.WINDOW_HEIGHT//2 - 5),
+            on_click=self.proceed,
+            hover_surf=ImageManager.load("assets/images/menu_button_hoveered.png"),
+            click_surf=ImageManager.load("assets/images/menu_button_clicked.png"),
+        )
+        self.moonsigil_button = Button(
+            ImageManager.load("assets/images/moonsigil_button.png"),
+            (372,297),
+            on_click=self.game.open_steam_page,
+            hover_surf=ImageManager.load("assets/images/moonsigil_button_hover.png"),
+            click_surf=ImageManager.load("assets/images/moonsigil_button_click.png"),
+        )
+        self.banner_toast = BannerToast(self)
+        self.grabbable_manager = GrabbableManager(self)
+
+    def proceed(self):
+        self.banner_toast.show("", fade_to_black=True, delay=1)
+        self.game.main_music.fadeout(500)
+        self.grabbable_manager.level_complete.play()
+
+    def update(self, dt, events):
+        self.banner_toast.update(dt, events)
+
+        if self.banner_toast.faded_to_black:
+            self.done = True
+
+        self.continue_button.update(dt, events)
+        self.moonsigil_button.update(dt, events)
+
+    def draw(self, surface, offset=(0, 0)):
+        surface.blit(self.backdrop, (offset[0] + c.WINDOW_WIDTH//2 - self.backdrop.get_width()//2, offset[1] + c.WINDOW_HEIGHT//2 - self.backdrop.get_height()//2))
+        self.continue_button.draw(surface, *offset)
+        self.moonsigil_button.draw(surface, *offset)
+        self.banner_toast.draw(surface, offset)
+
+    def next_frame(self):
+        self.game.current_level = -1
+        return TransitionFrame(self.game)
+
+
+class TransitionFrame(Frame):
+
+    def load(self):
+        self.age = 0
+        if self.game.current_level >= 3:
+            self.game.main_music.fadeout(500)
+
+    def update(self, dt, events):
+        self.age += dt
+        super().update(dt, events)
+        if (self.age > 2):
+            self.done = True
+
+    def draw(self, screen, offset=(0, 0)):
+        screen.fill((0, 0, 0))
+
+    def next_frame(self):
+        if (self.game.current_level == -1):
+            self.game.current_level = 0
+            return TitleFrame(self.game)
+        elif (self.game.current_level < 3):
+            return PackingFrame(self.game)
+        else:
+            return ThanksFrame(self.game)

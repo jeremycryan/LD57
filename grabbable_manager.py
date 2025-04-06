@@ -2,6 +2,7 @@ import pygame
 
 from primitives import Pose
 import constants as c
+from sound_manager import SoundManager
 
 
 class GrabbableManager:
@@ -21,6 +22,11 @@ class GrabbableManager:
         self.tooltip_grabbable = None
 
         self.completed = False
+        self.since_completed = 0
+        self.completed_sound_played = False
+        self.restarting = False
+
+        self.level_complete = SoundManager.load("assets/audio/level_complete.ogg")
 
     def add_grabbables(self, *args):
         for arg in args:
@@ -58,6 +64,11 @@ class GrabbableManager:
                 if event.button == 3 and not self.held_grabbable:
                     self.try_pull_out()
                     break
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    self.frame.banner_toast.show("Restarting Level!", fade_to_black=True, delay=0)
+                    self.frame.game.shake(2)
+                    self.restarting = True
 
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
@@ -67,7 +78,14 @@ class GrabbableManager:
         self.update_held_grabbable_placeability()
         if (self.everything_is_packed()) and not self.completed:
             self.completed = True
-            self.frame.banner_toast.show("Level complete!", fade_to_black = True)
+            self.frame.banner_toast.show("Level complete!", fade_to_black = True, delay=-1)
+            self.frame.game.shake(2)
+
+        if self.completed:
+            self.since_completed += dt
+            if not self.completed_sound_played and self.since_completed > 1.25:
+                self.level_complete.play()
+                self.completed_sound_played = True
 
         self.set_tooltip_grabbable()
 
@@ -188,6 +206,7 @@ class GrabbableManager:
         self.original_grab_container = container
 
     def pick_up(self, grabbable):
+        grabbable.on_become_held()
         self.original_grab_container = None
         self.move_to_front(grabbable)
         self.held_grabbable = grabbable
@@ -223,6 +242,7 @@ class GrabbableManager:
                     self.original_valid_geometric_container.add_grabbable(self.held_grabbable)
             else:
                 self.remove_from_all_geometric_containers(self.held_grabbable)
+            self.held_grabbable.on_placed()
             self.held_grabbable = None
             return
 
@@ -237,7 +257,9 @@ class GrabbableManager:
 
         if self.held_grabbable:
             self.held_grabbable.on_put_in_me(None)
+            self.held_grabbable.on_placed()
         self.held_grabbable = None
+
 
     def everything_is_packed(self):
         if len(self.grabbables) == 1:

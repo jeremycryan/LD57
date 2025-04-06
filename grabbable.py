@@ -1,14 +1,17 @@
 import math
+import random
 import time
 import constants as c
 
 import pygame
 
 from primitives import Pose
+from sound_manager import SoundManager
+
 
 class Grabbable:
 
-    def __init__(self, frame, surface, name="Object", position = (0, 0), can_contain_things = False, alive = False, can_only_be_placed_in = None, can_only_contain = None, contents_must_be_smaller = False, tags=None, can_only_contain_tags = None, capacity = 1, cannot_be_placed_in_anything=False):
+    def __init__(self, frame, surface, name="Object", position = (0, 0), shadow_height=5, can_contain_things = False, alive = False, can_only_be_placed_in = None, can_only_contain = None, contents_must_be_smaller = False, tags=None, can_only_contain_tags = None, capacity = 1, cannot_be_placed_in_anything=False):
         self.name = name
         self.frame = frame
         self.position = Pose(position)
@@ -23,6 +26,7 @@ class Grabbable:
         self.put_in_animation_length = 0.1
         self.since_put_in_me = 999
         self.put_in_me_animation_length = 0.3
+        self.shadow_height = shadow_height
 
         self.placeable = True
 
@@ -63,7 +67,19 @@ class Grabbable:
 
         self.contents_must_be_smaller = contents_must_be_smaller
 
+        self.sounds = [SoundManager.load(f"assets/audio/pop_{i}.ogg") for i in range(1, 5)]
+        for sound in self.sounds:
+            sound.set_volume(0.3)
+        self.close_sounds = [SoundManager.load(f"assets/audio/place_{i}.ogg") for i in range(1, 4)]
+        self.open_sounds = [SoundManager.load(f"assets/audio/open_{i}.ogg") for i in range(1, 4)]
+        self.drop_sounds = [SoundManager.load(f"assets/audio/drop_{i}.ogg") for i in range(1, 4)]
+        for sound in self.drop_sounds:
+            sound.set_volume(0.5)
+
         self.tooltip = self.generate_tooltip()
+        self.age = 0
+
+        self.particles = []
 
     def generate_tooltip(self):
         sections = []
@@ -139,6 +155,7 @@ class Grabbable:
         self.target_position = pose
 
     def update(self, dt, events):
+        self.age += dt
         self.since_pulled_out += dt
         self.since_put_in += dt
         self.since_put_in_me += dt
@@ -150,6 +167,11 @@ class Grabbable:
                 grabbable.set_target_position(self.position)
                 grabbable.update(dt, events)
 
+        for particle in self.particles[:]:
+            particle.update(dt, events)
+            if particle.destroyed:
+                self.particles.remove(particle)
+
     def draw_rects(self, surface, offset=(0, 0)):
         for rect in self.bounding_rects:
             x = offset[0] + rect.x + self.position.x - self.rect.w//2
@@ -158,6 +180,7 @@ class Grabbable:
         pygame.draw.rect(surface, (0, 0, 255), (self.position.x - self.rect.w//2, self.position.y - self.rect.h//2, self.rect.w, self.rect.h), width = 2)
 
     def draw(self, surface, offset = (0, 0)):
+
         surf_to_draw = self.draw_surface
         if not self.placeable:
             surf_to_draw = surf_to_draw.copy()
@@ -199,15 +222,15 @@ class Grabbable:
 
         x = int(offset[0] + self.position.x - surf_to_draw.get_width()//2)
         y = int(offset[1] + self.position.y - surf_to_draw.get_height()//2)
-        # if self.outline_enabled:
-        #     self.draw_outline = pygame.mask.from_surface(surf_to_draw).outline(2)
-        #     if self.draw_outline:
-        #         pygame.draw.polygon(
-        #             surface,
-        #             (255, 255, 255),
-        #             [(i[0] + x, i[1] + y) for i in self.draw_outline],
-        #             width=3
-        #         )
+
+
+        if True:
+            shadow = pygame.mask.from_surface(surf_to_draw).to_surface(setcolor=(200, 200, 200), unsetcolor=(255, 255, 255))
+            surface.blit(shadow, (x, y+self.shadow_height), special_flags=pygame.BLEND_MULT)
+
+        for particle in self.particles:
+            particle.draw(surface, offset)
+
         surface.blit(surf_to_draw, (x, y))
 
         for grabbable in self.inner_grabbables:
@@ -273,6 +296,21 @@ class Grabbable:
 
     def on_put_in_me(self, other):
         self.since_put_in_me = 0
+
+    def on_become_held(self):
+        random.choice(self.sounds).play()
+
+    def on_placed(self):
+        if (self.age > 0.2):
+            random.choice(self.drop_sounds).play()
+
+    def on_closed(self):
+        if (self.age > 0.2):
+            random.choice(self.close_sounds).play()
+
+    def on_opened(self):
+        if (self.age > 0.2):
+            random.choice(self.open_sounds).play()
 
     def collides_with_other(self, other, position = None):
         if position is None:
@@ -370,6 +408,7 @@ class GeometricContainer(Grabbable):
                 if grabbable.is_geometric_container:
                     grabbable.toggle_container(items_to_remove)
             self.set_surface(self.closed_surf)
+            self.on_closed()
         else:
             self.is_geometric_container = True
             self.can_be_grabbed = False
@@ -381,6 +420,7 @@ class GeometricContainer(Grabbable):
                 grabbable.on_pulled_out_of(self)
 
             self.set_surface(self.original_surface)
+            self.on_opened()
         self.on_put_in_me(None)
 
     def interact(self, items_to_remove = None, items_to_add = None):

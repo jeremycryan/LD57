@@ -11,6 +11,8 @@ from sound_manager import SoundManager
 from image_manager import ImageManager
 import asyncio
 
+import webbrowser
+
 
 class Game:
     def __init__(self):
@@ -29,12 +31,31 @@ class Game:
 
         pygame.display.set_caption(f"{c.CAPTION}")
 
+        self.title_music = SoundManager.load("assets/audio/title.ogg")
+        self.title_music.set_volume(0.4)
+        self.main_music = SoundManager.load("assets/audio/music.ogg")
+        self.main_music.set_volume(0.4)
+
+        #self.title_music.play(-1)
+
+
+        #self.open_steam_page()
+
         asyncio.run(self.main())
 
     def shake(self, amt=15):
         self.shake_amp = amt
         self.since_shake = 0
 
+    @staticmethod
+    def is_web_build():
+        return sys.platform == "emscripten"
+
+    def open_steam_page(self):
+        if not self.is_web_build():
+            webbrowser.open('https://store.steampowered.com/app/3284290/Moonsigil_Atlas/')
+        else:
+            webbrowser.open('https://store.steampowered.com/app/3284290/Moonsigil_Atlas/')
 
     def get_shake_offset(self):
         magnitude = math.cos(self.since_shake * 40) * self.shake_amp
@@ -47,7 +68,7 @@ class Game:
         pass
 
     async def main(self):
-        current_frame = f.PackingFrame(self)
+        current_frame = f.TitleFrame(self)
         current_frame.load()
         self.clock.tick(60)
 
