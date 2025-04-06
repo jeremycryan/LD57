@@ -25,6 +25,7 @@ class Game:
         self.shake_amp = 0
         self.since_shake = 999
         self.reset()
+        self.current_level = 0
 
         pygame.display.set_caption(f"{c.CAPTION}")
 
@@ -36,7 +37,7 @@ class Game:
 
 
     def get_shake_offset(self):
-        magnitude = math.cos(self.since_shake * 60) * self.shake_amp
+        magnitude = math.cos(self.since_shake * 40) * self.shake_amp
         direction = Pose((1, 1))
         if abs(magnitude) < 1:
             magnitude = 0
