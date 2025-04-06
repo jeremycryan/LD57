@@ -5,6 +5,7 @@ import constants as c
 
 import pygame
 
+from particle import Dust
 from primitives import Pose
 from sound_manager import SoundManager
 
@@ -37,7 +38,6 @@ class Grabbable:
 
         self.cannot_be_placed_in_anything = cannot_be_placed_in_anything
 
-        self.draw_outline = []
         self.outline_enabled = False
 
         self.can_contain_things = can_contain_things
@@ -241,6 +241,14 @@ class Grabbable:
 
         #self.draw_rects(surface, offset)
 
+    def spawn_dust_particles(self, count):
+        for i in range(count):
+            self.particles.append(Dust(
+                self.position.get_position(),
+                surface_for_reference=self.draw_surface,
+                outline_points = self.draw_outline
+            ))
+
     def try_pull_out(self):
         if self.inner_grabbables:
             result = self.inner_grabbables[-1]
@@ -288,6 +296,7 @@ class Grabbable:
         self.since_pulled_out = 0
         self.inside_another = False
         other.on_put_in_me(self)
+        random.choice(self.sounds).play()
 
     def on_put_in(self, other):
         self.since_put_in = 0
@@ -296,17 +305,22 @@ class Grabbable:
 
     def on_put_in_me(self, other):
         self.since_put_in_me = 0
+        if (self.age > 0.2):
+            random.choice(self.drop_sounds).play()
 
     def on_become_held(self):
-        random.choice(self.sounds).play()
+        if self.age > 0.2:
+            random.choice(self.sounds).play()
 
     def on_placed(self):
         if (self.age > 0.2):
             random.choice(self.drop_sounds).play()
+            self.spawn_dust_particles(25)
 
     def on_closed(self):
         if (self.age > 0.2):
             random.choice(self.close_sounds).play()
+            self.spawn_dust_particles(25)
 
     def on_opened(self):
         if (self.age > 0.2):
