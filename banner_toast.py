@@ -11,12 +11,15 @@ class BannerToast:
         self.small_alert_text = pygame.font.Font("assets/fonts/smallest_pixel.ttf", size=10)
         self.small_alert_glyphs = {i: self.small_alert_text.render(i, False, (255, 255, 255)) for i in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./'!?-_ "}
         self.small_alert_text = ""
+        self.subtitle_font = pygame.font.Font("assets/fonts/smallest_pixel.ttf", size=20)
+
 
         self.since_toast = 999
         self.toast_duration = 2
         self.showing = 0
 
         self.text_surf = None
+        self.subtitle_surf = None
         self.black = pygame.Surface(c.WINDOW_SIZE)
         self.black.fill((0, 0, 0))
 
@@ -41,7 +44,7 @@ class BannerToast:
             self.faded_to_black = True
         if not self.text:
             self.showing = 0
-        self.black.set_alpha(max(256 - 200 * self.age, max(128 * self.showing, 512 * through - 255 if self.fade_to_black else 0)))
+        self.black.set_alpha(max(256 - 200 * self.age, max(175 * self.showing, 512 * through - 255 if self.fade_to_black else 0)))
         if (self.black.get_alpha() > 1):
             surface.blit(self.black, (0, 0))
         if (self.showing > 0 and self.text):
@@ -59,6 +62,9 @@ class BannerToast:
             banner_surf.set_alpha(banner_alpha)
             #surface.blit(banner_surf, (0, c.WINDOW_HEIGHT//2 - banner_height//2))
 
+            self.subtitle_surf.set_alpha(255 * self.showing)
+            surface.blit(self.subtitle_surf, (c.WINDOW_WIDTH//2 - self.subtitle_surf.get_width()//2, c.WINDOW_HEIGHT // 2 - self.subtitle_surf.get_height()//2 - 25))
+
             self.text_surf.set_alpha(255*self.showing)
             surface.blit(self.text_surf, (c.WINDOW_WIDTH//2 - self.text_surf.get_width()//2, c.WINDOW_HEIGHT//2 - self.text_surf.get_height()//2))
 
@@ -71,13 +77,13 @@ class BannerToast:
                 surface.blit(letter, (x, y + 2 * math.sin(time.time()*3 - x/17)))
                 x += letter.get_width()
 
-
         pass
 
-    def show(self, text, fade_to_black = False, delay = 0):
+    def show(self, text, fade_to_black = False, delay = 0, subtitle=""):
         self.text = text
         self.since_toast = delay
         self.text_surf = self.font.render(self.text, False, (255, 255, 255))
+        self.subtitle_surf = self.subtitle_font.render(subtitle, False, (255, 255, 255))
         self.small_alert_text = ""
         self.fade_to_black = fade_to_black
 

@@ -9,6 +9,7 @@ from image_manager import ImageManager
 from sound_manager import SoundManager
 import constants as c
 from Button import Button
+import platform
 
 class Frame:
     def __init__(self, game):
@@ -26,6 +27,9 @@ class Frame:
 
     def next_frame(self):
         return Frame(self.game)
+
+    def name(self):
+        return self.__class__.__name__
 
 
 
@@ -139,6 +143,7 @@ class PackingFrame(Frame):
                           position=(23, 115),
                           cannot_be_placed_in_anything=True,
                           can_contain_things=True,
+                          can_only_contain="Suitcase",
                           capacity=1),
                 Grabbable(self, ImageManager.load("assets/images/nes.png"),
                           name="Nantucket Entertainment System",
@@ -275,9 +280,17 @@ class PackingFrame(Frame):
             self.grabbable_manager.add_grabbable(item)
 
         self.banner_toast = BannerToast(self)
-        self.banner_toast.show("Pack everything up!")
-
+        subtitle = ""
         if self.game.current_level == 0:
+            subtitle = "Level One: Overnight"
+        if self.game.current_level == 1:
+            subtitle = "Level Two: Catsitting"
+        if self.game.current_level == 2:
+            subtitle = "Level Three: Game Night"
+        self.banner_toast.show("Pack everything up!", subtitle=subtitle)
+
+        if self.game.just_on_title_screen == True:
+            self.game.just_on_title_screen = False
             self.game.main_music.play(-1)
 
         self.purr_sound = SoundManager.load("assets/audio/purr.ogg")
@@ -303,7 +316,7 @@ class PackingFrame(Frame):
         self.banner_toast.update(dt, events)
         if (self.grabbable_manager.completed or self.grabbable_manager.restarting) and self.banner_toast.faded_to_black and not self.done:
             self.done = True
-            if (True or self.grabbable_manager.completed):
+            if (self.grabbable_manager.completed):
                 self.game.current_level += 1
         if (self.grabbable_manager.held_grabbable and self.grabbable_manager.held_grabbable.name == "Crouton"):
             self.purr_sound.set_volume(1)
@@ -372,6 +385,7 @@ class TitleFrame(Frame):
         self.banner_toast.draw(surface, offset)
 
     def next_frame(self):
+        self.game.just_on_title_screen = True
         return TransitionFrame(self.game)
 
 

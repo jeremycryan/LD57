@@ -66,6 +66,8 @@ class GrabbableManager:
                     break
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
+                    if (self.frame.name() == "TitleFrame"):
+                        continue
                     self.frame.banner_toast.show("Restarting Level!", fade_to_black=True, delay=0)
                     self.frame.game.shake(2)
                     self.restarting = True

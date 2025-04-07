@@ -5,6 +5,7 @@ import pygame
 
 from image_manager import ImageManager
 from primitives import Pose
+import platform
 
 
 class Particle:
@@ -47,9 +48,8 @@ class Dust(Particle):
     SURF = None
 
     def __init__(self, position=(0, 0), duration = 0.5, surface_for_reference = None, outline_points = None):
-        if not Dust.SURF:
-            Dust.SURF = ImageManager.load("assets/images/dust.png")
 
+        self.surf = ImageManager.load("assets/images/dust.png")
         spawn_area_width = surface_for_reference.get_width()
         spawn_area_height = surface_for_reference.get_height()
         position_local = random.choice(outline_points) if outline_points else (0, 0)
@@ -74,7 +74,7 @@ class Dust(Particle):
 
     def draw(self, surface, offset=(0, 0)):
         scale = self.get_scale()
-        surf = pygame.transform.scale(Dust.SURF, (Dust.SURF.get_width() * scale, Dust.SURF.get_height() * scale))
+        surf = pygame.transform.scale(self.surf, (self.surf.get_width() * scale, self.surf.get_height() * scale))
         surf = pygame.transform.rotate(surf, self.rotation)
         surf.set_alpha(self.get_alpha())
         x = offset[0] + self.position.x - surf.get_width()//2

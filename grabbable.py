@@ -106,7 +106,7 @@ class Grabbable:
         for tag in self.tags:
             sections.append(tag)
         if self.name == "Egg of the Eternal Void":
-            sections.append("Can hold any one object")
+            sections.append("Can only contain suitcases")
         if self.cannot_be_placed_in_anything:
             sections.append("Cannot be placed in anything")
         return sections

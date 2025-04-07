@@ -35,6 +35,7 @@ class Game:
         self.title_music.set_volume(0.4)
         self.main_music = SoundManager.load("assets/audio/music.ogg")
         self.main_music.set_volume(0.4)
+        self.just_on_title_screen = False
 
         #self.title_music.play(-1)
 
